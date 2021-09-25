@@ -67,6 +67,7 @@ def get_reply_and_response():
         # Bot宛のメンションを含むかをチェック
         mention_to_bot_flag = False
         for user in status["entities"]["user_mentions"]:
+            print("user id, bot id", user["id"], BOT_ID)
             if user["id"] == BOT_ID:
                 mention_to_bot_flag = True
                 break
