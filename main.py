@@ -93,7 +93,7 @@ def get_reply_and_response():
         if "ping" in rcv_text:
             print("ping")
             send_text += "pong"
-            reply(send_text, TWEET_ID)
+            reply(send_text, TWEET_ID, auto_populate_reply_metadata=True)
     
     return "OK"
 
