@@ -38,6 +38,7 @@ def webhook_challenge():
 # Twitterイベント
 @app.route("/webhooks/twitter", methods=["POST"])
 def get_reply_and_response():
+    print("webhook")
     request_json = request.get_json()
     
     BOT_SCREEN_NAME = "CheckURL_bot"
@@ -48,6 +49,7 @@ def get_reply_and_response():
 
     # tweet_create_events: 通常のTweet Object生成イベント
     if "tweet_create_events" in request_json.keys():
+        print("tweet_create_events")
         status = request_json["tweet_create_events"][0]
 
         TWEET_ID = status["id"]
@@ -80,6 +82,7 @@ def get_reply_and_response():
         rcv_text = tweet_text.replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&")
 
         if "ping" in rcv_text:
+            print("ping")
             send_text += "pong"
             reply(send_text, TWEET_ID)
 
@@ -94,6 +97,7 @@ def extract_url(text: str) -> List[str]:
 # リプライ
 def reply(reply_text: str, reply_tweet_id: int):
     api.update_status(status=reply_text, in_reply_to_status_id=reply_tweet_id)
+    print("reply")
 
 
 if __name__ == "__main__":
