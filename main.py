@@ -33,7 +33,7 @@ def test():
 # Account Activity APIのChallenge-Response Check (CRC)
 @app.route("/webhooks/twitter", methods=["GET"])
 def webhook_challenge():
-    sha256_hash_digest = hmac.new(CONSUMER_SECRET, msg=request.args.get("crc_token"), digestmod=hashlib.sha256).digest()
+    sha256_hash_digest = hmac.new(CONSUMER_SECRET.encode(), msg=request.args.get("crc_token"), digestmod=hashlib.sha256).digest()
     response = {
         "response_token": "sha256=" + base64.b64encode(sha256_hash_digest)
     }
