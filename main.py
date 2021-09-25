@@ -24,6 +24,12 @@ api = tweepy.API(auth, wait_on_rate_limit=True)
 app = Flask(__name__)
 
 
+# test
+@app.route("/", methods=["GET"])
+def test():
+    return "OK"
+
+
 # Account Activity APIのChallenge-Response Check (CRC)
 @app.route("/webhooks/twitter", methods=["GET"])
 def webhook_challenge():
@@ -85,8 +91,8 @@ def get_reply_and_response():
             print("ping")
             send_text += "pong"
             reply(send_text, TWEET_ID)
-
-        return "OK"
+    
+    return "OK"
 
 
 # 文章からURLを抽出してリストで返す
