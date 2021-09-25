@@ -86,7 +86,7 @@ def get_reply_and_response():
 
 
 # 文章からURLを抽出してリストで返す
-def extract_url(text: str) -> List[str]:
+def extract_url(text: str) -> list[str]:
     pass
 
 
