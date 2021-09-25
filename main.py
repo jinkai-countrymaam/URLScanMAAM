@@ -76,6 +76,7 @@ def get_reply_and_response():
 
         # Bot自身のツイート、もしくはBot宛のメンションかリプライをどちらも含まない場合、以降の処理を行わない
         if TWEET_USER_ID == BOT_ID or not (mention_to_bot_flag or reply_to_bot_flag):
+            print("ignore")
             return "OK"
 
         tweet_text = status["text"]
@@ -86,6 +87,7 @@ def get_reply_and_response():
             print("LongText")
 
         rcv_text = tweet_text.replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&")
+        print(rcv_text)
 
         if "ping" in rcv_text:
             print("ping")
