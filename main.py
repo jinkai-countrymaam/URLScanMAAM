@@ -4,6 +4,7 @@ import base64
 import hashlib
 import hmac
 import json
+from typing import List
 
 import tweepy
 from flask import Flask, request, abort, render_template
@@ -86,7 +87,7 @@ def get_reply_and_response():
 
 
 # 文章からURLを抽出してリストで返す
-def extract_url(text: str) -> list[str]:
+def extract_url(text: str) -> List[str]:
     pass
 
 
