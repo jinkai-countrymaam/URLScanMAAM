@@ -35,7 +35,7 @@ def test():
 def webhook_challenge():
     sha256_hash_digest = hmac.new(CONSUMER_SECRET.encode(), msg=request.args.get("crc_token").encode(), digestmod=hashlib.sha256).digest()
     response = {
-        "response_token": ("sha256=" + base64.b64encode(sha256_hash_digest)).decode()
+        "response_token": "sha256=" + base64.b64encode(sha256_hash_digest).decode()
     }
 
     return json.dumps(response)
