@@ -44,7 +44,7 @@ def webhook_challenge():
 # Twitterイベント
 @app.route("/webhooks/twitter", methods=["POST"])
 def get_reply_and_response():
-    request_json = request.get_data()
+    request_json = json.loads(request.get_data().decode())
     print("webhook", request_json)
 
     BOT_SCREEN_NAME = "CheckURL_bot"
