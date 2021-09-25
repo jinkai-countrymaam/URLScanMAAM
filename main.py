@@ -93,7 +93,7 @@ def get_reply_and_response():
         if "ping" in rcv_text:
             print("ping")
             send_text += "pong"
-            reply(send_text, TWEET_ID, auto_populate_reply_metadata=True)
+            reply(send_text, TWEET_ID)
     
     return "OK"
 
@@ -105,7 +105,7 @@ def extract_url(text: str) -> List[str]:
 
 # リプライ
 def reply(reply_text: str, reply_tweet_id: int):
-    api.update_status(status=reply_text, in_reply_to_status_id=reply_tweet_id)
+    api.update_status(status=reply_text, in_reply_to_status_id=reply_tweet_id, auto_populate_reply_metadata=True)
     print("reply")
 
 
