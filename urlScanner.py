@@ -8,10 +8,10 @@ from base64 import urlsafe_b64encode
 import json
 
 #VT APIKeyの入力
-vtotal = Virustotal(API_KEY="2466c9f46e64bfe742920b586cdcb8ec9a49b50336e549e95d0ac4a2f84b68b5", API_VERSION="v3")
+vtotal = Virustotal(API_KEY="", API_VERSION="v3")
 
 #スキャンするURLの入力
-tweet_url = "https://www.google.com/"
+tweet_url = "https://developers.virustotal.com/reference"
 
 #VTでURLを診断し結果を返す
 def vt_scan():
@@ -22,6 +22,7 @@ def vt_scan():
         resp = vtotal.request(f"urls/{url_id}")
         result = resp.data
         return result
+
     except:
         print("URL分析時に問題が発生しました。")
 
@@ -36,10 +37,10 @@ def parse_response(result):
     tweet_result = f'{result_harmless}\n{result_malicious}\n{result_http_response_code}'
 
     return tweet_result
-    
+
 def main():
     tweet_result = parse_response(vt_scan())
-    print(tweet_result)
+    #print(tweet_result)
 
 if __name__ == '__main__':
     main()
