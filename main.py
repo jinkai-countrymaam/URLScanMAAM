@@ -4,6 +4,7 @@ import base64
 import hashlib
 import hmac
 import json
+import iocextract
 from typing import List
 
 import tweepy
@@ -100,7 +101,7 @@ def get_reply_and_response():
 
 # 文章からURLを抽出してリストで返す
 def extract_url(text: str) -> List[str]:
-    pass
+    return list(iocextract.extract_urls(text, refang=True))
 
 
 # リプライ
