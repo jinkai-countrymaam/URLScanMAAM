@@ -4,11 +4,11 @@ import base64
 import hashlib
 import hmac
 import json
-import iocextract
 from typing import List
 
 import tweepy
 from flask import Flask, request, abort, render_template
+import iocextract
 
 
 # 環境変数から各種API認証情報を取得
