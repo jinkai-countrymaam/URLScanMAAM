@@ -1,3 +1,6 @@
 requests==2.21.0
 tweepy==3.7.0
 Flask==0.12.2
+iocextract==1.13.1
+virustotal-python==0.1.3
+
