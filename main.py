@@ -174,6 +174,11 @@ def extract_url(text):
 # リプライ
 def reply(reply_text, reply_tweet_id, media_ids=None):
     print("reply_text", len(reply_text), reply_text)
+
+    # 文字数制限
+    if len(reply_text) > 140:
+        reply_text = reply_text[:135] + "..."
+
     if media_ids:
         api.update_status(media_ids=media_ids, status=reply_text, in_reply_to_status_id=reply_tweet_id, auto_populate_reply_metadata=True)
         print("画像付きreply")
