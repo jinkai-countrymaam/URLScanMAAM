@@ -97,10 +97,10 @@ def get_reply_and_response():
         if status["in_reply_to_status_id"]:
             reply_status = api.get_status(status["in_reply_to_status_id"])
             # 長文の場合一部省略されるため、全文を取得
-            if "extended_tweet" in reply_status:
-                tweet_text += "\n" + status["extended_tweet"]["full_text"]
+            if "extended_tweet" in dir(reply_status):
+                tweet_text += "\n" + reply_status.extended_tweet.full_text
             else:
-                tweet_text += "\n" + reply_status["text"]
+                tweet_text += "\n" + reply_status.text
 
         rcv_text = tweet_text.replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&")
         print(rcv_text)
