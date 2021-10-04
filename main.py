@@ -183,6 +183,7 @@ def reply(reply_text, reply_tweet_id, media_ids=None):
         # 制限範囲内の文字数をツイート
         valid_range_end = len("\n\n".join(reply_text.split("\n\n")[:2]))
         reply_text_cutout = reply_text[:valid_range_end] + "\n..."
+        print(parse_tweet(reply_text_cutout).weightedLength)
         if media_ids:
             first_tweet = api.update_status(media_ids=media_ids, status=reply_text_cutout, in_reply_to_status_id=reply_tweet_id, auto_populate_reply_metadata=True)
             print("画像付きreply", reply_text_cutout)
