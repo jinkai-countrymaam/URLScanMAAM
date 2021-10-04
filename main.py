@@ -112,6 +112,9 @@ def get_reply_and_response():
 
             try:
                 ss_image = screenshot.get_ss_from_url(url)
+                # スクリーンショットを保存
+                with open("./screenshot.jpg", mode ='wb') as local_file:
+                    local_file.write(ss_image)
             except Exception as e:
                 print(e)
                 ss_image = None
