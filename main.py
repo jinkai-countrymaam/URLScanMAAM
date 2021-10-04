@@ -102,6 +102,8 @@ def get_reply_and_response():
             # TweetObjectからURLを取得
             url_list = [u["expanded_url"] for u in status["entities"]["urls"]]
             url_list += extract_url(rcv_text)
+            # Twitterの短縮URLを排除
+            url_list = filter(lambda x: not x.startswith("https://t.co"), url_list)
             # 重複を排除
             url_list = list(set(url_list))
 
