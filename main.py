@@ -52,7 +52,7 @@ def get_reply_and_response():
     request_json = json.loads(request.get_data().decode())
     #print("webhook", request_json)
 
-    BOT_SCREEN_NAME = "CheckURL_bot"
+    BOT_SCREEN_NAME = "URLScan_MaamBot"
     bot = api.get_user(screen_name=BOT_SCREEN_NAME)
     BOT_ID = bot.id
 
