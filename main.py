@@ -99,7 +99,12 @@ def get_reply_and_response():
             send_text += "pong"
             reply(send_text, TWEET_ID)
         else:
-            url_list = extract_url(rcv_text)
+            # TweetObjectからURLを取得
+            url_list = [u["expandurl"] for u in status["entities"]["urls"]]
+            url_list += extract_url(rcv_text)
+            # 重複を排除
+            url_list = list(set(url_list))
+
             # ツイート文中にURLが見つからなかった場合
             if not url_list:
                 print("URL not included")
