@@ -106,6 +106,9 @@ def get_reply_and_response():
             url_list = filter(lambda x: not x.startswith("https://t.co"), url_list)
             # 重複を排除
             url_list = list(set(url_list))
+            print("URL list", url_list)
+            # URLを4つまでに制限(Twitterの投稿可能な画像の数が4枚であるため)
+            url_list = url_list[:4]
 
             # ツイート文中にURLが見つからなかった場合
             if not url_list:
@@ -113,38 +116,52 @@ def get_reply_and_response():
                 reply("URLが見つかりませんでした。", TWEET_ID)
                 return "OK"
 
-            print("URL list", url_list)
-            # テスト用: 見つかったURLのうち、最初のもののみを処理
-            url = url_list[0]
+            # 投稿用画像IDリスト
+            media_ids= []
+            # URLスキャンとSSの結果テキストリスト
+            url_result_text_list = []
 
-            try:
-                ss_image = screenshot.get_ss_from_url(url)
-                # スクリーンショットを保存
-                image_filepath = "./screenshot.jpg"
-                with open(image_filepath, mode ='wb') as local_file:
-                    local_file.write(ss_image)
-            except Exception as e:
-                print(e)
-                ss_image = None
-            
-            try:
-                scan_result_text = url_scanner.parse_response(url_scanner.vt_scan(url))
-            except Exception as e:
-                print(e)
-                scan_result_text = None
+            # URLをループ
+            for i, url in enumerate(url_list):
+                # スクリーンショット
+                try:
+                    ss_image = screenshot.get_ss_from_url(url)
+                    # スクリーンショットを保存
+                    image_filepath = "./screenshot{i}.jpg"
+                    with open(image_filepath, mode ='wb') as local_file:
+                        local_file.write(ss_image)
+                    img = api.media_upload()
+                    media_ids.append(img.media_id_string)
+                except Exception as e:
+                    print("SS取得失敗", e)
+                    ss_image = None
 
-            # URLスキャンとスクリーンショットの取得の両方に成功
-            if ss_image and scan_result_text:
-                reply(scan_result_text, TWEET_ID, image_filepath=image_filepath)
-            # URLスキャンに失敗
-            elif ss_image and not scan_result_text:
-                reply("URLのスキャンに失敗しました。", TWEET_ID, image_filepath=image_filepath)
-            # スクリーンショットの取得に失敗
-            elif not ss_image and scan_result_text:
-                reply(scan_result_text + "\n\nスクリーンショットの取得に失敗しました。", TWEET_ID)
-            # 両方に失敗
+                # URLスキャン
+                try:
+                    scan_result_text = url_scanner.parse_response(url_scanner.vt_scan(url))
+                except Exception as e:
+                    print(e)
+                    scan_result_text = "URLのスキャンに失敗しました。"
+
+                url_result_text = f"URL：{url}"
+
+                # URLスキャンの結果を投稿ツイート文に追加
+                url_result_text += "\n" + scan_result_text
+                
+                # スクリーンショットの取得に失敗
+                if not ss_image:
+                    url_result_text += "\nスクリーンショットの取得に失敗しました。"
+
+                url_result_text_list.append(url_result_text)
+
+            # ツイート文
+            post_text = "\n\n".join(url_result_text_list)
+            # 1つ以上画像が取得できている場合
+            if any(media_ids):
+                reply(post_text, media_ids=media_ids)
             else:
-                reply("URLのスキャンとスクリーンショットの取得に失敗しました。", TWEET_ID)
+                reply(post_text)
+
 
     return "OK"
 
@@ -155,9 +172,9 @@ def extract_url(text):
 
 
 # リプライ
-def reply(reply_text, reply_tweet_id, image_filepath=None):
-    if image_filepath:
-        api.update_with_media(image_filepath, status=reply_text, in_reply_to_status_id=reply_tweet_id, auto_populate_reply_metadata=True)
+def reply(reply_text, reply_tweet_id, media_ids=None):
+    if media_ids:
+        api.update_status(media_ids=media_ids, status=reply_text, in_reply_to_status_id=reply_tweet_id, auto_populate_reply_metadata=True)
         print("画像付きreply")
     else:
         api.update_status(status=reply_text, in_reply_to_status_id=reply_tweet_id, auto_populate_reply_metadata=True)
