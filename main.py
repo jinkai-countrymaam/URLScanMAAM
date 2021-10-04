@@ -190,8 +190,8 @@ def reply(reply_text, reply_tweet_id, media_ids=None):
             first_tweet = api.update_status(status=reply_text_cutout, in_reply_to_status_id=reply_tweet_id, auto_populate_reply_metadata=True)
             print("画像なしreply", reply_text_cutout)
         
-        # 137文字以降をリプライにつなげる
-        reply(status="..." + reply_text[valid_range_end:], in_reply_to_status_id=first_tweet.id, auto_populate_reply_metadata=True)
+        # 制限範囲以降をリプライにつなげる
+        reply("..." + reply_text[valid_range_end:], first_tweet.id)
 
     if media_ids:
         api.update_status(media_ids=media_ids, status=reply_text, in_reply_to_status_id=reply_tweet_id, auto_populate_reply_metadata=True)
