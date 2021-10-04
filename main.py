@@ -157,10 +157,10 @@ def get_reply_and_response():
             # ツイート文
             post_text = "\n\n".join(url_result_text_list)
             # 1つ以上画像が取得できている場合
-            if any(media_ids):
-                reply(post_text, media_ids=media_ids)
+            if media_ids:
+                reply(post_text, TWEET_ID, media_ids=media_ids)
             else:
-                reply(post_text)
+                reply(post_text, TWEET_ID)
 
 
     return "OK"
