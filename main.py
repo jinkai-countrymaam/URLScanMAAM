@@ -103,7 +103,7 @@ def get_reply_and_response():
             url_list = [u["expanded_url"] for u in status["entities"]["urls"]]
             url_list += extract_url(rcv_text)
             # Twitterの短縮URLを排除
-            url_list = filter(lambda x: not x.startswith("https://t.co"), url_list)
+            url_list = list(filter(lambda x: not x.startswith("https://t.co"), url_list))
             # 重複を排除
             url_list = sorted(set(url_list), key=url_list.index)
             print("URL list", url_list)
