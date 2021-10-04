@@ -106,6 +106,7 @@ def get_reply_and_response():
                 reply("URLが見つかりませんでした。", TWEET_ID)
                 return "OK"
 
+            print("URL list", url_list)
             # テスト用: 見つかったURLのうち、最初のもののみを処理
             url = url_list[0]
 

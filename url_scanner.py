@@ -2,12 +2,13 @@
 # MITLicenseのライブラリvirustotal_pythonを使用
 # !pip install virustotal-python
 from base64 import urlsafe_b64encode
+import os
 
 from virustotal_python import Virustotal
 
 
 # VT APIKeyの入力
-vtotal = Virustotal(API_KEY="", API_VERSION="v3")
+vtotal = Virustotal(API_KEY=os.environ["VIRUSTOTAL_ACCESS_KEY"], API_VERSION="v3")
 
 
 # VTでURLを診断し結果を返す
