@@ -116,7 +116,7 @@ def get_reply_and_response():
                 ss_image = None
             
             try:
-                scan_result_text = url_scanner.parse_response(url_scanner.vt_scan())
+                scan_result_text = url_scanner.parse_response(url_scanner.vt_scan(url))
             except Exception as e:
                 print(e)
                 scan_result_text = None
