@@ -113,7 +113,8 @@ def get_reply_and_response():
             try:
                 ss_image = screenshot.get_ss_from_url(url)
                 # スクリーンショットを保存
-                with open("./screenshot.jpg", mode ='wb') as local_file:
+                image_filepath = "./screenshot.jpg"
+                with open(image_filepath, mode ='wb') as local_file:
                     local_file.write(ss_image)
             except Exception as e:
                 print(e)
@@ -127,10 +128,10 @@ def get_reply_and_response():
 
             # URLスキャンとスクリーンショットの取得の両方に成功
             if ss_image and scan_result_text:
-                reply(scan_result_text, TWEET_ID, image_filepath=ss_image)
+                reply(scan_result_text, TWEET_ID, image_filepath=image_filepath)
             # URLスキャンに失敗
             elif ss_image and not scan_result_text:
-                reply("URLのスキャンに失敗しました。", TWEET_ID, image_filepath=ss_image)
+                reply("URLのスキャンに失敗しました。", TWEET_ID, image_filepath=image_filepath)
             # スクリーンショットの取得に失敗
             elif not ss_image and scan_result_text:
                 reply(scan_result_text + "\n\nスクリーンショットの取得に失敗しました。", TWEET_ID)
