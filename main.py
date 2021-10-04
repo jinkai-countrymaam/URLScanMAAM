@@ -10,6 +10,9 @@ import tweepy
 from flask import Flask, request, abort, render_template
 import iocextract
 
+import screenshot
+import url_scanner
+
 
 # 環境変数から各種API認証情報を取得
 CONSUMER_KEY = os.environ["CONSUMER_KEY"]
@@ -95,19 +98,58 @@ def get_reply_and_response():
             print("ping")
             send_text += "pong"
             reply(send_text, TWEET_ID)
-    
+        else:
+            url_list = extract_url(rcv_text)
+            # ツイート文中にURLが見つからなかった場合
+            if not url_list:
+                print("URL not included")
+                reply("URLが見つかりませんでした。", TWEET_ID)
+                return "OK"
+
+            # テスト用: 見つかったURLのうち、最初のもののみを処理
+            url = url_list[0]
+
+            try:
+                ss_image = screenshot.get_ss_from_url(url)
+            except Exception as e:
+                print(e)
+                ss_image = None
+            
+            try:
+                scan_result_text = url_scanner.parse_response(url_scanner.vt_scan())
+            except Exception as e:
+                print(e)
+                scan_result_text = None
+
+            # URLスキャンとスクリーンショットの取得の両方に成功
+            if ss_image and scan_result_text:
+                reply(scan_result_text, TWEET_ID, image_filepath=ss_image)
+            # URLスキャンに失敗
+            elif ss_image and not scan_result_text:
+                reply("URLのスキャンに失敗しました。", TWEET_ID, image_filepath=ss_image)
+            # スクリーンショットの取得に失敗
+            elif not ss_image and scan_result_text:
+                reply(scan_result_text + "\n\nスクリーンショットの取得に失敗しました。", TWEET_ID)
+            # 両方に失敗
+            else:
+                reply("URLのスキャンとスクリーンショットの取得に失敗しました。", TWEET_ID)
+
     return "OK"
 
 
 # 文章からURLを抽出してリストで返す
-def extract_url(text: str) -> List[str]:
+def extract_url(text):
     return list(iocextract.extract_urls(text, refang=True))
 
 
 # リプライ
-def reply(reply_text: str, reply_tweet_id: int):
-    api.update_status(status=reply_text, in_reply_to_status_id=reply_tweet_id, auto_populate_reply_metadata=True)
-    print("reply")
+def reply(reply_text, reply_tweet_id, image_filepath=None):
+    if image_filepath:
+        api.update_with_media(image_filepath, status=reply_text, in_reply_to_status_id=reply_tweet_id, auto_populate_reply_metadata=True)
+        print("画像付きreply")
+    else:
+        api.update_status(status=reply_text, in_reply_to_status_id=reply_tweet_id, auto_populate_reply_metadata=True)
+        print("画像なしreply")
 
 
 if __name__ == "__main__":
