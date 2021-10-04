@@ -130,7 +130,7 @@ def get_reply_and_response():
                     image_filepath = "./screenshot{i}.jpg"
                     with open(image_filepath, mode ='wb') as local_file:
                         local_file.write(ss_image)
-                    img = api.media_upload()
+                    img = api.media_upload(image_filepath)
                     media_ids.append(img.media_id_string)
                 except Exception as e:
                     print("SS取得失敗", e)
