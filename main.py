@@ -142,7 +142,7 @@ def get_reply_and_response():
                     scan_result_text = url_scanner.parse_response(url_scanner.vt_scan(url))
                 except Exception as e:
                     print(e)
-                    scan_result_text = "URLスキャンに失敗"
+                    scan_result_text = "URLスキャンに失敗しました"
 
                 url_result_text = f"{url}"
 
@@ -151,7 +151,7 @@ def get_reply_and_response():
                 
                 # スクリーンショットの取得に失敗
                 if not ss_image:
-                    url_result_text += "\nスクリーンショットの取得に失敗"
+                    url_result_text += "\nスクリーンショットの取得に失敗しました"
 
                 url_result_text_list.append(url_result_text)
 
@@ -176,7 +176,7 @@ def extract_url(text):
 def reply(reply_text, reply_tweet_id, media_ids=None):
     parse_result = parse_tweet(reply_text)
     print("reply_text", parse_result.weightedLength, reply_text)
-    
+
     # 文字数制限にかかる場合
     if parse_result.weightedLength >= 280:
         print("文字数制限", parse_tweet(reply_text).weightedLength)

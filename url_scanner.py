@@ -28,9 +28,9 @@ def vt_scan(tweet_url):
 # 診断結果（dict）をparse
 def parse_response(result):
     # ツイートしたい結果を抽出
-    result_harmless = f"良性判断：{result['attributes']['last_analysis_stats']['harmless']}個"
-    result_malicious = f"悪性判断：{result['attributes']['last_analysis_stats']['malicious']}個"
-    result_http_response_code = f"HTTP：{result['attributes']['last_http_response_code']}"
+    result_harmless = f"良性判断サイト：{result['attributes']['last_analysis_stats']['harmless']}個"
+    result_malicious = f"悪性判断サイト：{result['attributes']['last_analysis_stats']['malicious']}個"
+    result_http_response_code = f"HTTPコード：{result['attributes']['last_http_response_code']}"
     
     # ツイート文構築
     tweet_result = f'{result_harmless}\n{result_malicious}\n{result_http_response_code}'
