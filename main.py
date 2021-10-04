@@ -181,7 +181,7 @@ def reply(reply_text, reply_tweet_id, media_ids=None):
     if parse_result.weightedLength >= 280:
         print("文字数制限", parse_tweet(reply_text).weightedLength)
         # 制限範囲内の文字数をツイート
-        valid_range_end = reply_text[:parse_result.validRangeEnd - 10].rfind("\n\n")
+        valid_range_end = len("\n\n".join(reply_text.split("\n\n")[:2]))
         reply_text_cutout = reply_text[:valid_range_end] + "\n..."
         if media_ids:
             first_tweet = api.update_status(media_ids=media_ids, status=reply_text_cutout, in_reply_to_status_id=reply_tweet_id, auto_populate_reply_metadata=True)
