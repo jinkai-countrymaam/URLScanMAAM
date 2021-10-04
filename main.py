@@ -9,6 +9,10 @@ from typing import List
 import tweepy
 from flask import Flask, request, abort, render_template
 import iocextract
+from twitter_text import parse_tweet
+
+import screenshot
+import url_scanner
 
 
 # 環境変数から各種API認証情報を取得
@@ -46,9 +50,9 @@ def webhook_challenge():
 @app.route("/webhooks/twitter", methods=["POST"])
 def get_reply_and_response():
     request_json = json.loads(request.get_data().decode())
-    print("webhook", request_json)
+    #print("webhook", request_json)
 
-    BOT_SCREEN_NAME = "CheckURL_bot"
+    BOT_SCREEN_NAME = "URLScan_MaamBot"
     bot = api.get_user(screen_name=BOT_SCREEN_NAME)
     BOT_ID = bot.id
 
@@ -81,33 +85,128 @@ def get_reply_and_response():
             print("ignore")
             return "OK"
 
-        tweet_text = status["text"]
+        
 
         # 長文の場合一部省略されるため、全文を取得
         if "extended_tweet" in status:
             tweet_text = status["extended_tweet"]["full_text"]
-            print("LongText")
+        else:
+            tweet_text = status["text"]
+
+        # ツイートにリプライ先が存在する場合そのツイートのテキストも取得
+        if status["in_reply_to_status_id"]:
+            reply_status = api.get_status(status["in_reply_to_status_id"])
+            # データ中のURLを取得
+            tweet_text += "\n" + " ".join([u["expanded_url"] for u in reply_status.entities["urls"]])
+            # 長文の場合一部省略されるため、全文を取得
+            if "extended_tweet" in dir(reply_status):
+                tweet_text += "\n" + reply_status.extended_tweet.full_text
+            else:
+                tweet_text += "\n" + reply_status.text
 
         rcv_text = tweet_text.replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&")
         print(rcv_text)
+        
+        # TweetObjectからURLを取得
+        url_list = [u["expanded_url"] for u in status["entities"]["urls"]]
+        url_list += extract_url(rcv_text)
+        # Twitterの短縮URLを排除
+        url_list = list(filter(lambda x: not x.startswith("https://t.co"), url_list))
+        # 重複を排除
+        url_list = sorted(set(url_list), key=url_list.index)
+        print("URL list", url_list)
+        # URLを4つまでに制限(Twitterの投稿可能な画像の数が4枚であるため)
+        url_list = url_list[:4]
 
-        if "ping" in rcv_text:
-            print("ping")
-            send_text += "pong"
-            reply(send_text, TWEET_ID)
-    
+        # ツイート文中にURLが見つからなかった場合
+        if not url_list:
+            print("URL not included")
+            reply("URLが見つかりませんでした。", TWEET_ID)
+            return "OK"
+
+        # 投稿用画像IDリスト
+        media_ids= []
+        # URLスキャンとSSの結果テキストリスト
+        url_result_text_list = []
+
+        # URLをループ
+        for i, url in enumerate(url_list):
+            # スクリーンショット
+            try:
+                ss_image = screenshot.get_ss_from_url(url)
+                # スクリーンショットを保存
+                image_filepath = "./screenshot{i}.jpg"
+                with open(image_filepath, mode ='wb') as local_file:
+                    local_file.write(ss_image)
+                img = api.media_upload(image_filepath)
+                media_ids.append(img.media_id_string)
+            except Exception as e:
+                print("SS取得失敗", e)
+                ss_image = None
+
+            # URLスキャン
+            try:
+                scan_result_text = url_scanner.parse_response(url_scanner.vt_scan(url))
+            except Exception as e:
+                print(e)
+                scan_result_text = "URLスキャンに失敗しました"
+
+            url_result_text = f"{url}"
+
+            # URLスキャンの結果を投稿ツイート文に追加
+            url_result_text += "\n" + scan_result_text
+            
+            # スクリーンショットの取得に失敗
+            if not ss_image:
+                url_result_text += "\nスクリーンショットの取得に失敗しました"
+
+            url_result_text_list.append(url_result_text)
+
+        # ツイート文
+        post_text = "\n\n".join(url_result_text_list)
+        # 1つ以上画像が取得できている場合
+        if media_ids:
+            reply(post_text, TWEET_ID, media_ids=media_ids)
+        else:
+            reply(post_text, TWEET_ID)
+
+
     return "OK"
 
 
 # 文章からURLを抽出してリストで返す
-def extract_url(text: str) -> List[str]:
+def extract_url(text):
     return list(iocextract.extract_urls(text, refang=True))
 
 
 # リプライ
-def reply(reply_text: str, reply_tweet_id: int):
-    api.update_status(status=reply_text, in_reply_to_status_id=reply_tweet_id, auto_populate_reply_metadata=True)
-    print("reply")
+def reply(reply_text, reply_tweet_id, media_ids=None):
+    parse_result = parse_tweet(reply_text)
+    print("reply_text", parse_result.weightedLength, reply_text)
+
+    # 文字数制限にかかる場合
+    if parse_result.weightedLength >= 280:
+        print("文字数制限", parse_tweet(reply_text).weightedLength)
+        # 制限範囲内の文字数をツイート
+        valid_range_end = len("\n\n".join(reply_text.split("\n\n")[:2]))
+        reply_text_cutout = reply_text[:valid_range_end] + "\n..."
+        print(parse_tweet(reply_text_cutout).weightedLength)
+        if media_ids:
+            first_tweet = api.update_status(media_ids=media_ids, status=reply_text_cutout, in_reply_to_status_id=reply_tweet_id, auto_populate_reply_metadata=True)
+            print("画像付きreply", reply_text_cutout)
+        else:
+            first_tweet = api.update_status(status=reply_text_cutout, in_reply_to_status_id=reply_tweet_id, auto_populate_reply_metadata=True)
+            print("画像なしreply", reply_text_cutout)
+        
+        # 制限範囲以降をリプライにつなげる
+        reply("...\n" + reply_text[valid_range_end:].strip(), first_tweet.id)
+
+    if media_ids:
+        api.update_status(media_ids=media_ids, status=reply_text, in_reply_to_status_id=reply_tweet_id, auto_populate_reply_metadata=True)
+        print("画像付きreply", reply_text)
+    else:
+        api.update_status(status=reply_text, in_reply_to_status_id=reply_tweet_id, auto_populate_reply_metadata=True)
+        print("画像なしreply", reply_text)
 
 
 if __name__ == "__main__":

@@ -2,12 +2,13 @@
 # MITLicenseのライブラリvirustotal_pythonを使用
 # !pip install virustotal-python
 from base64 import urlsafe_b64encode
+import os
 
 from virustotal_python import Virustotal
 
 
 # VT APIKeyの入力
-vtotal = Virustotal(API_KEY="", API_VERSION="v3")
+vtotal = Virustotal(API_KEY=os.environ["VIRUSTOTAL_ACCESS_KEY"], API_VERSION="v3")
 
 
 # VTでURLを診断し結果を返す
@@ -29,7 +30,7 @@ def parse_response(result):
     # ツイートしたい結果を抽出
     result_harmless = f"良性判断サイト：{result['attributes']['last_analysis_stats']['harmless']}個"
     result_malicious = f"悪性判断サイト：{result['attributes']['last_analysis_stats']['malicious']}個"
-    result_http_response_code = f"HTTPレスポンスコード：{result['attributes']['last_http_response_code']}"
+    result_http_response_code = f"HTTPコード：{result['attributes']['last_http_response_code']}"
     
     # ツイート文構築
     tweet_result = f'{result_harmless}\n{result_malicious}\n{result_http_response_code}'
