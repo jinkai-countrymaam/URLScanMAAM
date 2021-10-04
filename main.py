@@ -96,6 +96,8 @@ def get_reply_and_response():
         # ツイートにリプライ先が存在する場合そのツイートのテキストも取得
         if status["in_reply_to_status_id"]:
             reply_status = api.get_status(status["in_reply_to_status_id"])
+            # データ中のURLを取得
+            tweet_text += "\n" + " ".join([u["expanded_url"] for u in reply_status.entities["urls"]])
             # 長文の場合一部省略されるため、全文を取得
             if "extended_tweet" in dir(reply_status):
                 tweet_text += "\n" + reply_status.extended_tweet.full_text
