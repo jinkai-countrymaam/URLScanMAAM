@@ -105,7 +105,7 @@ def get_reply_and_response():
             # Twitterの短縮URLを排除
             url_list = filter(lambda x: not x.startswith("https://t.co"), url_list)
             # 重複を排除
-            url_list = sorted(set(url_list), key=url_list.index))
+            url_list = sorted(set(url_list), key=url_list.index)
             print("URL list", url_list)
             # URLを4つまでに制限(Twitterの投稿可能な画像の数が4枚であるため)
             url_list = url_list[:4]
