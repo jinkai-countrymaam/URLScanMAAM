@@ -85,83 +85,88 @@ def get_reply_and_response():
             print("ignore")
             return "OK"
 
-        tweet_text = status["text"]
+        
 
         # 長文の場合一部省略されるため、全文を取得
         if "extended_tweet" in status:
             tweet_text = status["extended_tweet"]["full_text"]
-            print("LongText")
+        else:
+            tweet_text = status["text"]
+
+        # ツイートにリプライ先が存在する場合そのツイートのテキストも取得
+        if status["in_reply_to_status_id"]:
+            reply_status = api.get_status(status["in_reply_to_status_id"])
+            # 長文の場合一部省略されるため、全文を取得
+            if "extended_tweet" in reply_status:
+                tweet_text += "\n" + status["extended_tweet"]["full_text"]
+            else:
+                tweet_text += "\n" + reply_status["text"]
 
         rcv_text = tweet_text.replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&")
         print(rcv_text)
+        
+        # TweetObjectからURLを取得
+        url_list = [u["expanded_url"] for u in status["entities"]["urls"]]
+        url_list += extract_url(rcv_text)
+        # Twitterの短縮URLを排除
+        url_list = list(filter(lambda x: not x.startswith("https://t.co"), url_list))
+        # 重複を排除
+        url_list = sorted(set(url_list), key=url_list.index)
+        print("URL list", url_list)
+        # URLを4つまでに制限(Twitterの投稿可能な画像の数が4枚であるため)
+        url_list = url_list[:4]
 
-        if "ping" in rcv_text:
-            print("ping")
-            send_text += "pong"
-            reply(send_text, TWEET_ID)
+        # ツイート文中にURLが見つからなかった場合
+        if not url_list:
+            print("URL not included")
+            reply("URLが見つかりませんでした。", TWEET_ID)
+            return "OK"
+
+        # 投稿用画像IDリスト
+        media_ids= []
+        # URLスキャンとSSの結果テキストリスト
+        url_result_text_list = []
+
+        # URLをループ
+        for i, url in enumerate(url_list):
+            # スクリーンショット
+            try:
+                ss_image = screenshot.get_ss_from_url(url)
+                # スクリーンショットを保存
+                image_filepath = "./screenshot{i}.jpg"
+                with open(image_filepath, mode ='wb') as local_file:
+                    local_file.write(ss_image)
+                img = api.media_upload(image_filepath)
+                media_ids.append(img.media_id_string)
+            except Exception as e:
+                print("SS取得失敗", e)
+                ss_image = None
+
+            # URLスキャン
+            try:
+                scan_result_text = url_scanner.parse_response(url_scanner.vt_scan(url))
+            except Exception as e:
+                print(e)
+                scan_result_text = "URLスキャンに失敗しました"
+
+            url_result_text = f"{url}"
+
+            # URLスキャンの結果を投稿ツイート文に追加
+            url_result_text += "\n" + scan_result_text
+            
+            # スクリーンショットの取得に失敗
+            if not ss_image:
+                url_result_text += "\nスクリーンショットの取得に失敗しました"
+
+            url_result_text_list.append(url_result_text)
+
+        # ツイート文
+        post_text = "\n\n".join(url_result_text_list)
+        # 1つ以上画像が取得できている場合
+        if media_ids:
+            reply(post_text, TWEET_ID, media_ids=media_ids)
         else:
-            # TweetObjectからURLを取得
-            url_list = [u["expanded_url"] for u in status["entities"]["urls"]]
-            url_list += extract_url(rcv_text)
-            # Twitterの短縮URLを排除
-            url_list = list(filter(lambda x: not x.startswith("https://t.co"), url_list))
-            # 重複を排除
-            url_list = sorted(set(url_list), key=url_list.index)
-            print("URL list", url_list)
-            # URLを4つまでに制限(Twitterの投稿可能な画像の数が4枚であるため)
-            url_list = url_list[:4]
-
-            # ツイート文中にURLが見つからなかった場合
-            if not url_list:
-                print("URL not included")
-                reply("URLが見つかりませんでした。", TWEET_ID)
-                return "OK"
-
-            # 投稿用画像IDリスト
-            media_ids= []
-            # URLスキャンとSSの結果テキストリスト
-            url_result_text_list = []
-
-            # URLをループ
-            for i, url in enumerate(url_list):
-                # スクリーンショット
-                try:
-                    ss_image = screenshot.get_ss_from_url(url)
-                    # スクリーンショットを保存
-                    image_filepath = "./screenshot{i}.jpg"
-                    with open(image_filepath, mode ='wb') as local_file:
-                        local_file.write(ss_image)
-                    img = api.media_upload(image_filepath)
-                    media_ids.append(img.media_id_string)
-                except Exception as e:
-                    print("SS取得失敗", e)
-                    ss_image = None
-
-                # URLスキャン
-                try:
-                    scan_result_text = url_scanner.parse_response(url_scanner.vt_scan(url))
-                except Exception as e:
-                    print(e)
-                    scan_result_text = "URLスキャンに失敗しました"
-
-                url_result_text = f"{url}"
-
-                # URLスキャンの結果を投稿ツイート文に追加
-                url_result_text += "\n" + scan_result_text
-                
-                # スクリーンショットの取得に失敗
-                if not ss_image:
-                    url_result_text += "\nスクリーンショットの取得に失敗しました"
-
-                url_result_text_list.append(url_result_text)
-
-            # ツイート文
-            post_text = "\n\n".join(url_result_text_list)
-            # 1つ以上画像が取得できている場合
-            if media_ids:
-                reply(post_text, TWEET_ID, media_ids=media_ids)
-            else:
-                reply(post_text, TWEET_ID)
+            reply(post_text, TWEET_ID)
 
 
     return "OK"
