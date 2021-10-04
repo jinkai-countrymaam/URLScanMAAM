@@ -9,6 +9,7 @@ from typing import List
 import tweepy
 from flask import Flask, request, abort, render_template
 import iocextract
+from twitter_text import parse_tweet
 
 import screenshot
 import url_scanner
@@ -49,7 +50,7 @@ def webhook_challenge():
 @app.route("/webhooks/twitter", methods=["POST"])
 def get_reply_and_response():
     request_json = json.loads(request.get_data().decode())
-    print("webhook", request_json)
+    #print("webhook", request_json)
 
     BOT_SCREEN_NAME = "CheckURL_bot"
     bot = api.get_user(screen_name=BOT_SCREEN_NAME)
@@ -175,16 +176,29 @@ def extract_url(text):
 def reply(reply_text, reply_tweet_id, media_ids=None):
     print("reply_text", len(reply_text), reply_text)
 
-    # 文字数制限
-    if len(reply_text) > 140:
-        reply_text = reply_text[:135] + "..."
+    # 文字数制限にかかる場合
+    parse_result = parse_tweet(reply_text)
+    if parse_result['weightedLength'] >= 280:
+        print("文字数制限", parse_tweet(reply_text)['weightedLength'])
+        # 制限範囲内の文字数をツイート
+        valid_range_end = parse_result['validRangeEnd'] - 2
+        reply_text_cutout = reply_text[:valid_range_end] + "..."
+        if media_ids:
+            first_tweet = api.update_status(media_ids=media_ids, status=reply_text_cutout, in_reply_to_status_id=reply_tweet_id, auto_populate_reply_metadata=True)
+            print("画像付きreply", reply_text_cutout)
+        else:
+            first_tweet = api.update_status(status=reply_text_cutout, in_reply_to_status_id=reply_tweet_id, auto_populate_reply_metadata=True)
+            print("画像なしreply", reply_text_cutout)
+        
+        # 137文字以降をリプライにつなげる
+        reply(status="..." + reply_text[valid_range_end:], in_reply_to_status_id=first_tweet.id, auto_populate_reply_metadata=True)
 
     if media_ids:
         api.update_status(media_ids=media_ids, status=reply_text, in_reply_to_status_id=reply_tweet_id, auto_populate_reply_metadata=True)
-        print("画像付きreply")
+        print("画像付きreply", reply_text)
     else:
         api.update_status(status=reply_text, in_reply_to_status_id=reply_tweet_id, auto_populate_reply_metadata=True)
-        print("画像なしreply")
+        print("画像なしreply", reply_text)
 
 
 if __name__ == "__main__":
