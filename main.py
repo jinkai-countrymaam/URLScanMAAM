@@ -105,7 +105,7 @@ def get_reply_and_response():
             # Twitterの短縮URLを排除
             url_list = filter(lambda x: not x.startswith("https://t.co"), url_list)
             # 重複を排除
-            url_list = list(set(url_list))
+            url_list = sorted(set(url_list), key=url_list.index))
             print("URL list", url_list)
             # URLを4つまでに制限(Twitterの投稿可能な画像の数が4枚であるため)
             url_list = url_list[:4]
@@ -143,7 +143,7 @@ def get_reply_and_response():
                     print(e)
                     scan_result_text = "URLスキャンに失敗"
 
-                url_result_text = f"URL：{url}"
+                url_result_text = f"{url}"
 
                 # URLスキャンの結果を投稿ツイート文に追加
                 url_result_text += "\n" + scan_result_text
