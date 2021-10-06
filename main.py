@@ -151,7 +151,7 @@ def get_reply_and_response():
                 print(e)
                 scan_result_text = "URLスキャンに失敗しました"
 
-            url_result_text = f"{url}"
+            url_result_text = url[:url.rfind(".")] + "[.]" + url[url.rfind(".") + 1:]
 
             # URLスキャンの結果を投稿ツイート文に追加
             url_result_text += "\n" + scan_result_text
